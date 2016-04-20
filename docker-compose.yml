@@ -1,0 +1,37 @@
+version: '2'
+services:
+  consul:
+    image: progrium/consul
+    container_name: consul
+    hostname: consul
+    command: -server -bootstrap -ui-dir /ui
+    ports:
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:53/udp"
+  vault:
+    build: vault/
+    image: jonbrouse/vault
+    container_name: vault
+    hostname: vault
+    command: server -config=/opt/vault.json
+    volumes:
+      - ./assets/vault.json:/opt/vault.json
+    ports: 
+      - "8200:8200"
+    links:
+      - consul
+    cap_add:
+      - IPC_LOCK
+  flask:
+    build: flask/
+    image: jonbrouse/flask
+    container_name: flask
+    hostname: flask
+    command: --app=sample_app dev --hostname=0.0.0.0
+    volumes:
+      - ./flask/assets/sample_app/__init__.py:/opt/sample_app/__init__.py
+    ports: 
+      - "5000:5000"
+#    links:
+#      - consul
