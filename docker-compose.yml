@@ -1,10 +1,13 @@
 version: '2'
 services:
   consul:
-    image: progrium/consul
+    build: consul/
+    image: jonbrouse/consul
     container_name: consul
     hostname: consul
-    command: -server -bootstrap -ui-dir /ui
+    command: agent -server -bootstrap-expect 1 -ui-dir /consul/ui -config-dir /consul/conf.d
+    volumes:
+      - ./consul/assets/conf.d:/consul/conf.d
     ports:
       - "8400:8400"
       - "8500:8500"
@@ -14,13 +17,15 @@ services:
     image: jonbrouse/vault
     container_name: vault
     hostname: vault
-    command: server -config=/opt/vault.json
+    command: server -config=/vault/conf.d/vault.hcl
     volumes:
-      - ./assets/vault.json:/opt/vault.json
+      - ./vault/assets/conf.d:/vault/conf.d
     ports: 
       - "8200:8200"
     links:
       - consul
+    environment:
+      - VAULT_ADDR=http://127.0.0.1:8200
     cap_add:
       - IPC_LOCK
   flask:
